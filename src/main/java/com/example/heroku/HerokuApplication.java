@@ -1,19 +1,3 @@
-/*
- * Copyright 2002-2014 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.example.heroku;
 
 import com.zaxxer.hikari.HikariConfig;
@@ -33,6 +17,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Random;
 
 @Controller
 @SpringBootApplication
@@ -57,21 +42,41 @@ public class HerokuApplication {
   String db(Map<String, Object> model) {
     try (Connection connection = dataSource.getConnection()) {
       Statement stmt = connection.createStatement();
-      stmt.executeUpdate("CREATE TABLE IF NOT EXISTS ticks (tick timestamp)");
-      stmt.executeUpdate("INSERT INTO ticks VALUES (now())");
-      ResultSet rs = stmt.executeQuery("SELECT tick FROM ticks");
 
-      ArrayList<String> output = new ArrayList<String>();
+      // Create the table with an additional column for the random string
+      stmt.executeUpdate("CREATE TABLE IF NOT EXISTS table_timestamp_and_random_string (tick timestamp, random_string varchar(30))");
+
+      // Insert current timestamp and a randomly generated string
+      stmt.executeUpdate("INSERT INTO table_timestamp_and_random_string VALUES (now(), '" + getRandomString() + "')");
+
+      // Retrieve all records from the table
+      ResultSet rs = stmt.executeQuery("SELECT tick, random_string FROM table_timestamp_and_random_string");
+
+      // Create an output list
+      ArrayList<String> output = new ArrayList<>();
       while (rs.next()) {
-        output.add("Read from DB: " + rs.getTimestamp("tick"));
+        output.add("Read from DB: " + rs.getTimestamp("tick") + " - Random String: " + rs.getString("random_string"));
       }
 
+      // Add records to the model
       model.put("records", output);
       return "db";
     } catch (Exception e) {
       model.put("message", e.getMessage());
       return "error";
     }
+  }
+
+  // Method to generate a random alphanumeric string of length 30
+  private String getRandomString() {
+    int length = 30;
+    String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    Random random = new Random();
+    StringBuilder sb = new StringBuilder(length);
+    for (int i = 0; i < length; i++) {
+      sb.append(characters.charAt(random.nextInt(characters.length())));
+    }
+    return sb.toString();
   }
 
   @Bean
@@ -84,5 +89,4 @@ public class HerokuApplication {
       return new HikariDataSource(config);
     }
   }
-
 }
