@@ -55,7 +55,7 @@ public class HerokuApplication {
       // Create an output list
       ArrayList<String> output = new ArrayList<>();
       while (rs.next()) {
-        output.add("Read from DB: " + rs.getTimestamp("tick") + rs.getString("random_string"));
+        output.add("Read from DB: " + rs.getTimestamp("tick") + "  " + rs.getString("random_string"));
       }
 
       // Add records to the model
