@@ -40,6 +40,7 @@ public class HerokuApplication {
 
   @RequestMapping("/db")
   String db(Map<String, Object> model) {
+    System.out.println("Annika Dame");
     try (Connection connection = dataSource.getConnection()) {
       Statement stmt = connection.createStatement();
 
